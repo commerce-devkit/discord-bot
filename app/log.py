@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, override
 import sentry_sdk
 from loguru import logger
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.utils import BadDsn
 
 if TYPE_CHECKING:
     from pydantic import SecretStr
@@ -64,12 +65,26 @@ def setup() -> None:
 # the configuration is loaded, but loading the configuration requires loguru.
 def setup_sentry(sentry_dsn: SecretStr | None) -> None:
     if sentry_dsn is not None:
+        dsn = sentry_dsn.get_secret_value().strip()
+        if dsn == "abcd":
+            logger.warning(
+                "ignoring placeholder sentry_dsn from example config; "
+                "remove it or replace it with a real DSN to enable Sentry"
+            )
+            return
         logger.info("initializing sentry")
-        sentry_sdk.init(
-            dsn=sentry_dsn.get_secret_value(),
-            enable_logs=True,
-            traces_sample_rate=1.0,
-            profiles_sample_rate=1.0,
-            profile_lifecycle="trace",
-            integrations=[AsyncioIntegration()],
-        )
+        try:
+            sentry_sdk.init(
+                dsn=dsn,
+                enable_logs=True,
+                traces_sample_rate=1.0,
+                profiles_sample_rate=1.0,
+                profile_lifecycle="trace",
+                integrations=[AsyncioIntegration()],
+            )
+        except BadDsn as error:
+            msg = (
+                "invalid sentry_dsn in configuration; remove it to disable Sentry "
+                "or provide a valid DSN"
+            )
+            raise ValueError(msg) from error

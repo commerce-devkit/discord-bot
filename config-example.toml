@@ -1,6 +1,8 @@
 data_dir = "data"
 guild_id = 1005603569187160125
-sentry_dsn = "abcd"
+
+# Optional: uncomment and set a real DSN to enable Sentry.
+# sentry_dsn = "https://examplePublicKey@o0.ingest.sentry.io/0"
 
 [brand]
 bot_name = "DevKit Bot"
