@@ -48,9 +48,9 @@ just check
 If `just` is unavailable, run the equivalent manual checks:
 
 ```bash
-uv run ruff check
-uv run basedpyright app tests
-uv run pytest -p terminalprogress tests
+uv run --group dev ruff check
+uv run --group dev basedpyright app tests
+uv run --group dev pytest -p terminalprogress tests
 cd packages/toolbox
 uv run basedpyright src tests
 uv run pytest -p terminalprogress tests

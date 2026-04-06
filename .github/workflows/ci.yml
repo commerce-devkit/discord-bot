@@ -28,7 +28,7 @@ jobs:
           version: ${{ env.UV_VERSION }}
       - name: Environment
         id: sync
-        run: uv sync
+        run: uv sync --group dev
 
       - name: taplo (TOML formatting)
         if: ${{ !cancelled() && steps.sync.conclusion == 'success' }}

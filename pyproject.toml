@@ -45,11 +45,14 @@ dev = [
 #   - `README.md`, especially § Project structure
 toolbox.workspace = true
 
+[tool.uv]
+default-groups = []
+
 [tool.uv.workspace]
 members = ["packages/*"]
 
 [build-system]
-requires = ["uv_build>=0.10.4,<0.11"]
+requires = ["uv_build>=0.11.3,<0.12"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
