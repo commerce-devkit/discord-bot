@@ -2,6 +2,7 @@
 
 from contextvars import ContextVar
 from functools import cached_property
+from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Literal, NamedTuple, override
 
 import discord as dc
@@ -10,7 +11,6 @@ from loguru import logger
 from pydantic import (
     AliasChoices,
     BaseModel,
-    DirectoryPath,
     Field,
     SecretStr,
     TypeAdapter,
@@ -134,7 +134,7 @@ class Config(BaseSettings):
 
     bot: CliSuppress[dc.Client]
     guild_id: int | None = None
-    data_dir: DirectoryPath
+    data_dir: Path
     sentry_dsn: SecretStr | None = None
 
     brand: ConfigBrand = Field(default_factory=ConfigBrand)
@@ -147,6 +147,10 @@ class Config(BaseSettings):
 
     @override
     def model_post_init(self, context: Any, /) -> None:
+        if self.data_dir.exists() and not self.data_dir.is_dir():
+            msg = f"data_dir must point to a directory: {self.data_dir}"
+            raise ValueError(msg)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         self.webhook._bot = self.bot  # noqa: SLF001  # pyright: ignore[reportPrivateUsage]
 
     @classmethod
