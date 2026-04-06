@@ -16,22 +16,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from app.bot import GhosttyBot
-
-URL_TEMPLATE = "https://ghostty.org/docs/{section}{page}"
-
-SECTIONS = {
-    "action": "config/keybind/reference#",
-    "config": "config/",
-    "help": "help/",
-    "install": "install/",
-    "keybind": "config/keybind/",
-    "option": "config/reference#",
-    "vt-concepts": "vt/concepts/",
-    "vt-control": "vt/control/",
-    "vt-csi": "vt/csi/",
-    "vt-esc": "vt/esc/",
-    "vt": "vt/",
-}
+    from app.config import ConfigDocs
 
 
 class Entry(TypedDict):
@@ -42,10 +27,14 @@ class Entry(TypedDict):
 
 @final
 class Docs(commands.Cog):
+    docs_config: ConfigDocs
     sitemap: dict[str, list[str]]
 
     def __init__(self, bot: GhosttyBot) -> None:
         self.bot = bot
+        docs_config = config().docs
+        assert docs_config is not None
+        self.docs_config = docs_config
         self.sitemap = {}
 
     @override
@@ -96,10 +85,11 @@ class Docs(commands.Cog):
                 self._load_children(sitemap, f"{path}-{page}", item.get("children", []))
 
     async def _get_file(self, path: str) -> str:
+        docs_config = self.docs_config
         return (
             await gh().rest.repos.async_get_content(
-                "ghostty-org",
-                "website",
+                docs_config.source_owner,
+                docs_config.source_repo,
                 path,
                 headers={"Accept": "application/vnd.github.raw+json"},
             )
@@ -111,7 +101,7 @@ class Docs(commands.Cog):
     @dc.app_commands.default_permissions(ban_members=True)
     async def refresh_docs(self, interaction: dc.Interaction) -> None:
         # The client-side check with `default_permissions` isn't guaranteed to work.
-        if not config().is_ghostty_mod(interaction.user):
+        if not config().is_mod(interaction.user):
             await interaction.response.send_message(
                 "Only mods can run this command", ephemeral=True
             )
@@ -121,42 +111,42 @@ class Docs(commands.Cog):
         await interaction.followup.send("Sitemap refreshed.", ephemeral=True)
 
     async def refresh_sitemap(self) -> None:
-        # Reading vt/, install/, help/, config/, config/keybind/ subpages by reading
-        # nav.json
-        nav: list[Entry] = json.loads(await self._get_file("docs/nav.json"))["items"]
+        docs_config = self.docs_config
+        nav: list[Entry] = json.loads(await self._get_file(docs_config.nav_path))[
+            "items"
+        ]
+        nav_entries: dict[str, list[str]] = {}
         for entry in nav:
             if entry["type"] != "folder":
                 continue
             self._load_children(
-                self.sitemap, entry["path"].lstrip("/"), entry.get("children", [])
+                nav_entries, entry["path"].lstrip("/"), entry.get("children", [])
             )
 
-        # Reading config references by parsing headings in .mdx files
-        for key, config_path in (
-            ("option", "reference.mdx"),
-            ("action", "keybind/reference.mdx"),
-        ):
+        self.sitemap.clear()
+        for key, nav_path in docs_config.nav_sections.items():
+            if nav_path not in nav_entries:
+                logger.warning(
+                    "docs nav path {path!r} missing for section {section!r}",
+                    path=nav_path,
+                    section=key,
+                )
+                continue
+            self.sitemap[key] = nav_entries[nav_path]
+
+        for key, config_path in docs_config.page_sources.items():
             self.sitemap[key] = [
                 line.removeprefix("## ").strip("`")
-                for line in (
-                    await self._get_file(f"docs/config/{config_path}")
-                ).splitlines()
+                for line in (await self._get_file(config_path)).splitlines()
                 if line.startswith("## ")
             ]
-
-        # Manual adjustments
-        self.sitemap["install"].remove("release-notes")
-        self.sitemap["keybind"] = self.sitemap.pop("config-keybind")
-        del self.sitemap["install-release-notes"]
-        for vt_section in (s for s in SECTIONS if s.startswith("vt-")):
-            self.sitemap["vt"].remove(vt_section.removeprefix("vt-"))
         self.bot.bot_status.last_sitemap_refresh = dt.datetime.now(tz=dt.UTC)
 
     @docs.autocomplete("section")
     async def section_autocomplete(
         self, _: dc.Interaction, current: str
     ) -> list[Choice[str]]:
-        return generate_autocomplete(current, SECTIONS)
+        return generate_autocomplete(current, self.docs_config.url_paths)
 
     @docs.autocomplete("page")
     async def page_autocomplete(
@@ -178,17 +168,22 @@ class Docs(commands.Cog):
         return generate_autocomplete(current, self.sitemap.get(section, []))
 
     def get_docs_link(self, section: str, page: str) -> str:
-        if section not in SECTIONS:
+        if section not in self.docs_config.url_paths:
             msg = f"Invalid section {section!r}"
             raise ValueError(msg)
         if page not in self.sitemap.get(section, []):
             msg = f"Invalid page {page!r}"
             raise ValueError(msg)
-        return URL_TEMPLATE.format(
-            section=SECTIONS[section],
-            page=page if page != "overview" else "",
+        return (
+            self.docs_config.base_url.rstrip("/")
+            + "/"
+            + self.docs_config.url_paths[section]
+            + (page if page != "overview" else "")
         )
 
 
 async def setup(bot: GhosttyBot) -> None:
+    if config().docs is None:
+        logger.info("docs component disabled; no docs configuration provided")
+        return
     await bot.add_cog(Docs(bot))

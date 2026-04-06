@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, cast, final, override
 
 from githubkit.exception import RequestFailed
 from githubkit.versions.latest.models import IssuePropPullRequest, ReactionRollup
-from zig_codeblocks import extract_codeblocks
 
 from .discussions import get_discussion_comment
 from app.components.github_integration.entities.cache import entity_cache
@@ -16,6 +15,7 @@ from app.components.github_integration.models import (
     Reactions,
 )
 from app.config import gh
+from app.markdown import extract_fenced_codeblocks
 from toolbox.cache import TTRCache
 from toolbox.discord import escape_special
 from toolbox.misc import COLOR_PALETTE
@@ -391,7 +391,7 @@ async def _get_pr_review_comment(
 
 def _prettify_suggestions(comment: PullRequestReviewComment) -> str:
     suggestions = [
-        c for c in extract_codeblocks(comment.body) if c.lang == "suggestion"
+        c for c in extract_fenced_codeblocks(comment.body) if c.lang == "suggestion"
     ]
     body = comment.body
     if not suggestions:

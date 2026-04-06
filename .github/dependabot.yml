@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: main
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: ci(deps)
+    pull-request-branch-name:
+      separator: "-"
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: main
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
+    pull-request-branch-name:
+      separator: "-"
+
+  - package-ecosystem: pip
+    directory: /packages/toolbox
+    schedule:
+      interval: weekly
+    target-branch: main
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
+    pull-request-branch-name:
+      separator: "-"

@@ -28,19 +28,14 @@ if TYPE_CHECKING:
     from toolbox.discord import Account
 
 type WebhookFeedType = Literal["main", "discussions"]
-
-# This maps valid special ghostty-org repo prefixes to appropriate repo names. Since the
-# actual repo names are also valid prefixes, they can be viewed as self-mapping aliases.
-REPO_ALIASES = {
-    "ghostty": "ghostty",
-    "main": "ghostty",
+ENV_PREFIX = "BOT__"
+DEFAULT_REPO_ALIASES = {
+    "main": "website",
     "web": "website",
     "website": "website",
-    "discord-bot": "discord-bot",
-    "bot": "discord-bot",
-    "bobr": "discord-bot",
+    "meta": ".github",
+    "github": ".github",
 }
-ENV_PREFIX = "BOT__"
 
 
 def validate_type[T](obj: object, typ: type[T]) -> T:
@@ -50,6 +45,10 @@ def validate_type[T](obj: object, typ: type[T]) -> T:
 
 def _alias(name: str) -> AliasChoices:
     return AliasChoices(name, ENV_PREFIX + name.upper())
+
+
+def _default_repo_aliases() -> dict[str, str]:
+    return DEFAULT_REPO_ALIASES.copy()
 
 
 class ConfigRoles(BaseModel):
@@ -62,8 +61,30 @@ class ConfigTokens(BaseModel):
     github: SecretStr
 
 
+class ConfigBrand(BaseModel):
+    bot_name: str = "DevKit Bot"
+    community_name: str = "Commerce DevKit"
+    moderator_name: str = "DevKit Moderator"
+
+
+class ConfigGitHub(BaseModel):
+    owner: str = "commerce-devkit"
+    default_repo: str = "website"
+    repo_aliases: dict[str, str] = Field(default_factory=_default_repo_aliases)
+    ignored_issue_comment_logins: list[str] = Field(default_factory=list)
+
+
+class ConfigDocs(BaseModel):
+    base_url: str
+    source_owner: str
+    source_repo: str
+    nav_path: str = "docs/nav.json"
+    nav_sections: dict[str, str] = Field(default_factory=dict)
+    page_sources: dict[str, str] = Field(default_factory=dict)
+    url_paths: dict[str, str] = Field(default_factory=dict)
+
+
 class ConfigChannels(BaseModel):
-    hcb_feed: int
     help: int
     log: int
     media: int
@@ -73,7 +94,6 @@ class ConfigChannels(BaseModel):
 
 
 class Channels(NamedTuple):
-    hcb_feed: dc.TextChannel
     help: dc.ForumChannel
     log: dc.TextChannel
 
@@ -113,11 +133,13 @@ class Config(BaseSettings):
     )
 
     bot: CliSuppress[dc.Client]
-    accept_invite_url: str
     guild_id: int | None = None
     data_dir: DirectoryPath
     sentry_dsn: SecretStr | None = None
 
+    brand: ConfigBrand = Field(default_factory=ConfigBrand)
+    docs: ConfigDocs | None = None
+    github: ConfigGitHub = Field(default_factory=ConfigGitHub)
     tokens: ConfigTokens
     role_ids: Annotated[ConfigRoles, Field(validation_alias=_alias("roles"))]
     channel_ids: Annotated[ConfigChannels, Field(validation_alias=_alias("channels"))]
@@ -146,19 +168,18 @@ class Config(BaseSettings):
 
     @cached_property
     def channels(self) -> Channels:
-        logger.debug("fetching channels: hcb-feed, help, log")
+        logger.debug("fetching channels: help, log")
         channels = (
-            self.bot.get_channel(self.channel_ids.hcb_feed),
             self.bot.get_channel(self.channel_ids.help),
             self.bot.get_channel(self.channel_ids.log),
         )
         return validate_type(channels, Channels)
 
     @cached_property
-    def ghostty_guild(self) -> dc.Guild:
-        logger.debug("fetching ghostty guild")
+    def guild(self) -> dc.Guild:
+        logger.debug("fetching configured guild")
         if (id_ := self.guild_id) and (guild := self.bot.get_guild(id_)):
-            logger.trace("found ghostty guild")
+            logger.trace("found configured guild")
             return guild
         guild = self.bot.guilds[0]
         logger.info(
@@ -175,8 +196,8 @@ class Config(BaseSettings):
             and member.get_role(self.role_ids.helper) is None
         )
 
-    def is_ghostty_mod(self, user: Account) -> bool:
-        member = self.ghostty_guild.get_member(user.id)
+    def is_mod(self, user: Account) -> bool:
+        member = self.guild.get_member(user.id)
         return member is not None and member.get_role(self.role_ids.mod) is not None
 
 

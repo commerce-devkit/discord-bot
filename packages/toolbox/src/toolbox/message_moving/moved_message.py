@@ -82,7 +82,7 @@ class MovedMessage(ExtensibleMessage, dc.WebhookMessage):  # pyright: ignore[rep
         cls,
         message: dc.Message,
         *,
-        webhook_name: str = "Ghostty Moderator",
+        webhook_name: str = "DevKit Moderator",
         author: dc.Member | None = None,
     ) -> Self | MovedMessageLookupFailed:
         """

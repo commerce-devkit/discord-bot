@@ -30,7 +30,7 @@ def message_can_be_moved(message: dc.Message) -> bool:
 
 
 async def get_or_create_webhook(
-    channel: dc.TextChannel | dc.ForumChannel, name: str = "Ghostty Moderator"
+    channel: dc.TextChannel | dc.ForumChannel, name: str = "DevKit Moderator"
 ) -> dc.Webhook:
     webhooks = await channel.webhooks()
     for webhook in webhooks:

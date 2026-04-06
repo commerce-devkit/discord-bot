@@ -57,7 +57,7 @@ class BotStatus:
         if not self._commit_hash:
             return
 
-        remote = "https://github.com/ghostty-org/discord-bot"
+        remote = "https://github.com/commerce-devkit/discord-bot"
         with suppress(subprocess.CalledProcessError, FileNotFoundError):
             if found_remote := (
                 (await async_process_check_output("git", "remote", "get-url", "origin"))

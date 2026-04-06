@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  UV_VERSION: 0.10.4
+  UV_VERSION: 0.11.3
   UV_NO_SYNC: 1
   UV_LOCKED: 1
   PY_COLORS: 1
@@ -16,8 +16,7 @@ permissions:
   contents: read
 jobs:
   app:
-    if: github.repository == 'ghostty-org/discord-bot'
-    runs-on: namespace-profile-ghostty-sm
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -51,8 +50,7 @@ jobs:
         run: uv run pytest -vv tests
 
   toolbox:
-    if: github.repository == 'ghostty-org/discord-bot'
-    runs-on: namespace-profile-ghostty-sm
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./packages/toolbox

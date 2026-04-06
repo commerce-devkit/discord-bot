@@ -49,7 +49,7 @@ emojis = emojis_var.get
 
 
 @final
-class GhosttyBot(commands.Bot):
+class DevkitBot(commands.Bot):
     def __init__(self) -> None:
         log.setup()
         self._config_context_token = config_var.set(Config(bot=self))  # pyright: ignore[reportCallIssue]
@@ -192,7 +192,7 @@ class GhosttyBot(commands.Bot):
     async def load_emojis(self) -> None:
         self.emojis_loaded.clear()
 
-        for emoji in config().ghostty_guild.emojis:
+        for emoji in config().guild.emojis:
             if emoji.name in _EMOJI_NAMES:
                 self._emojis[cast("EmojiName", emoji.name)] = emoji
 
@@ -203,3 +203,6 @@ class GhosttyBot(commands.Bot):
             logger.error("failed to load emojis {emojis}", emojis=emoji_list)
 
         self.emojis_loaded.set()
+
+
+GhosttyBot = DevkitBot

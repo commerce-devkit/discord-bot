@@ -1,12 +1,11 @@
 import re
 from contextlib import suppress
-from functools import reduce
 from typing import TYPE_CHECKING, final, override
 
 from githubkit.exception import RequestFailed
-from zig_codeblocks import extract_codeblocks
 
-from app.config import REPO_ALIASES, gh
+from app.config import config, gh
+from app.markdown import strip_codeblocks
 from toolbox.cache import TTRCache
 
 if TYPE_CHECKING:
@@ -38,9 +37,7 @@ owner_cache = OwnerCache(hours=1)
 
 
 def remove_codeblocks(content: str) -> str:
-    return reduce(
-        lambda acc, cb: acc.replace(str(cb), ""), extract_codeblocks(content), content
-    )
+    return strip_codeblocks(content)
 
 
 async def find_repo_owner(name: str) -> str:
@@ -59,11 +56,11 @@ async def resolve_repo_signature(
 ) -> tuple[str, str] | None:
     match owner, repo:
         case None, None:
-            # The Ghostty repo
-            return "ghostty-org", "ghostty"
-        case None, repo if repo in REPO_ALIASES:
-            # Special ghostty-org prefixes
-            return "ghostty-org", REPO_ALIASES[repo]
+            github_config = config().github
+            return github_config.owner, github_config.default_repo
+        case None, repo if repo in config().github.repo_aliases:
+            github_config = config().github
+            return github_config.owner, github_config.repo_aliases[repo]
         case None, repo:
             # Only a name provided
             if repo_owner := await owner_cache.get(repo):

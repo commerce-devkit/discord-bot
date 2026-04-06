@@ -8,11 +8,11 @@ if TYPE_CHECKING:
     from app.bot import GhosttyBot
 
 STATUSES = (
-    CustomActivity("Watching over the Ghostty server 👻"),
+    CustomActivity("Watching over the community 👀"),
     CustomActivity("Haunting your threads 🧵"),
     CustomActivity("Admiring posts in #showcase"),
     CustomActivity("Watching over #help"),
-    CustomActivity("Listening to your complaints"),
+    CustomActivity("Listening for GitHub mentions"),
     CustomActivity("Playing with my config file"),
     CustomActivity("Competing in the terminal game"),
 )

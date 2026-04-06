@@ -15,6 +15,7 @@ from app.components.github_integration.webhooks.vouch import (
     find_vouch_command,
     register_vouch_command,
 )
+from app.config import config
 from toolbox.misc import format_event_sender
 
 if TYPE_CHECKING:
@@ -27,7 +28,6 @@ if TYPE_CHECKING:
 DISCUSSION_DIV_TAG = re.compile(
     r"\s*<div type='discussions-op-text'>((?:.|\s)*?)\s*</div>\s*", re.MULTILINE
 )
-VOUCH_BOT_LOGIN = "ghostty-vouch[bot]"
 
 
 def remove_discussion_div(body: str | None) -> str | None:
@@ -179,9 +179,13 @@ def register_hooks(webhook: Monalisten, vouch_queue: VouchQueue) -> None:  # noq
 
     @webhook.event.issue_comment.created
     async def comment_created(event: events.IssueCommentCreated) -> None:
-        if event.sender.login == VOUCH_BOT_LOGIN:
+        ignored_logins = set(config().github.ignored_issue_comment_logins)
+        if event.sender.login in ignored_logins:
             # Ignore, it's spammy -- a PR/issue closed event is a good enough hint.
-            logger.info("Ignoring ghostty-vouch comment")
+            logger.info(
+                "Ignoring configured bot comment from @{login}",
+                login=event.sender.login,
+            )
             return
 
         issue = event.issue

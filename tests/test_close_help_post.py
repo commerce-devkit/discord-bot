@@ -18,7 +18,7 @@ def fill_entity(**kwargs: Any) -> SimpleNamespace:
         "number": 0,
         "title": "",
         "body": None,
-        "html_url": "https://github.com/trag1c/zig-codeblocks/issues/1",
+        "html_url": "https://github.com/commerce-devkit/website/issues/1",
         "user": GitHubUser(login="", url="", icon_url=""),
         "created_at": dt.datetime(1, 1, 1, tzinfo=dt.UTC),
         "state": False,
@@ -37,7 +37,7 @@ def fill_entity(**kwargs: Any) -> SimpleNamespace:
 
 # Calling __new__ to skip initialization and having to pass in a proper Response object
 failed_request = RequestFailed.__new__(RequestFailed)
-repo = ("ghostty-org", "ghostty")
+repo = ("commerce-devkit", "website")
 gh_env = kp.KitPoser({
     "/rest/pulls/async_get": {
         kp.Call(*repo, 1234): fill_entity(number=1234),
@@ -50,7 +50,7 @@ gh_env = kp.KitPoser({
     "/graphql/arequest": {
         kp.Call(
             DISCUSSION_QUERY,
-            variables={"number": 2354, "org": "ghostty-org", "repo": "ghostty"},
+            variables={"number": 2354, "org": "commerce-devkit", "repo": "website"},
             __kitposer_wrap__=False,
         ): {"repository": {"discussion": fill_entity(number=2354).__dict__}},
     },
