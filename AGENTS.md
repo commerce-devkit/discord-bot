@@ -60,6 +60,7 @@ uv run pytest -p terminalprogress tests
 
 - Create semantic branch names such as `feature/<short-description>` or
   `docs/<short-description>`
+
 - Use Conventional Commits:
 
   ```text
@@ -67,6 +68,7 @@ uv run pytest -p terminalprogress tests
   ```
 
 - Prefer small, focused commits over one large mixed commit
+
 - Keep documentation-only changes in their own commit when practical
 
 ## What to avoid

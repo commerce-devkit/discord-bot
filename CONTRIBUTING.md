@@ -1,7 +1,7 @@
 # Contributing
 
-Thank you for improving DevKit Bot. This repository is a Commerce DevKit fork
-of the upstream Ghostty Discord bot, so please keep changes focused, well
+Thank you for improving DevKit Bot. This repository is a Commerce DevKit fork of
+the upstream Ghostty Discord bot, so please keep changes focused, well
 documented, and easy to reconcile with upstream when possible.
 
 ## Workflow
@@ -35,10 +35,14 @@ Common types in this repo:
 This bot runs on Python 3.14+ and is managed with [uv].
 
 1. Install [uv].
+
 2. Copy `config-example.toml` to `config.toml`.
+
 3. Fill in your Discord token, GitHub token, server IDs, role IDs, and channel
    IDs.
+
 4. Optionally configure the `[docs]` section if you want the `/docs` command.
+
 5. Run the bot:
 
    ```sh
