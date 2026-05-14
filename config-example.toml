@@ -73,3 +73,12 @@ discussions = 1334429137315502710
 # [docs.url_paths]
 # guide = "guides/"
 # option = "reference#"
+#
+# Optional Twitter/X feed integration for #media. The default feed_url works with
+# Nitter-compatible feeds; override it if you use another provider. `{account}` is
+# replaced with the configured account name.
+#
+# [twitter_feed]
+# account = "CommerceDevKit"
+# feed_url = "https://nitter.net/{account}/rss"
+# poll_interval_minutes = 5

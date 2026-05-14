@@ -84,6 +84,16 @@ class ConfigDocs(BaseModel):
     url_paths: dict[str, str] = Field(default_factory=dict)
 
 
+class ConfigTwitterFeed(BaseModel):
+    account: str = Field(pattern=r"^[A-Za-z0-9_]{1,15}$")
+    feed_url: str = "https://nitter.net/{account}/rss"
+    poll_interval_minutes: int = Field(default=5, ge=1)
+
+    @property
+    def resolved_feed_url(self) -> str:
+        return self.feed_url.format(account=self.account)
+
+
 class ConfigChannels(BaseModel):
     help: int
     log: int
@@ -140,6 +150,7 @@ class Config(BaseSettings):
     brand: ConfigBrand = Field(default_factory=ConfigBrand)
     docs: ConfigDocs | None = None
     github: ConfigGitHub = Field(default_factory=ConfigGitHub)
+    twitter_feed: ConfigTwitterFeed | None = None
     tokens: ConfigTokens
     role_ids: Annotated[ConfigRoles, Field(validation_alias=_alias("roles"))]
     channel_ids: Annotated[ConfigChannels, Field(validation_alias=_alias("channels"))]

@@ -15,10 +15,33 @@ For development setup and project structure, see
 - Automatic stale/solved handling for the `#help` forum
 - GitHub issue, PR, discussion, commit, comment, and code-link expansion
 - Social embed fixups
+- Optional Twitter/X feed posting into `#media`
 - Message filters for showcase/media-style channels
 - Message moving and follow-up editing tools
 - XKCD mention support
 - Optional `/docs` links when a docs source is configured
+
+## Twitter/X feed integration
+
+The bot can optionally post new updates from a configured Twitter/X account into
+the configured `#media` channel.
+
+Configure the optional `[twitter_feed]` section in `config.toml`:
+
+```toml
+[twitter_feed]
+account = "CommerceDevKit"
+feed_url = "https://nitter.net/{account}/rss"
+poll_interval_minutes = 5
+```
+
+- `account` is the handle to follow.
+- `feed_url` is a configurable source URL and may include `{account}`.
+- `poll_interval_minutes` controls how often the bot checks for new posts.
+
+On the first successful sync, the bot records the newest post and starts posting
+only newer items after that, so enabling the integration does not backfill old
+posts into `#media`.
 
 ## GitHub mentions
 
